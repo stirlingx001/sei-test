@@ -117,6 +117,7 @@ func convertTxsResults(txsResults []*abci.ExecTxResult) []*abci.ResponseDeliverT
 			EvmTxInfo: v.EvmTxInfo,
 		}
 	}
+
 	return res
 }
 
@@ -148,6 +149,8 @@ func ParseResponse(txResult *abci.ResponseDeliverTx) (string, *types2.MsgEVMTran
 	fmt.Printf("leaf_data: %x\n", data3)
 	leafHash := sha3.Sum256(data3)
 	fmt.Printf("leafHash: %x\n", leafHash)
+
+	fmt.Printf("log: %+v\n", txResponse.Logs)
 
 	return "", nil, errors.New("not found")
 }
