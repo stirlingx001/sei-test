@@ -11,8 +11,12 @@ message MsgEVMTransactionResponse {
 
 message Log {
    string address = 1;
-   repeated string topics = 2;
+   repeated Topic topics = 2;
    bytes data = 3;
    uint32 index = 4;
    bool synthetic = 5;
+}
+
+message Topic {
+  string topic = 1;
 }
