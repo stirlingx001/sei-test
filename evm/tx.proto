@@ -1,0 +1,18 @@
+syntax = "proto3";
+// package seiprotocol.seichain.evm;
+
+message MsgEVMTransactionResponse {
+  uint64 gas_used = 1;
+  string vm_error = 2;
+  bytes return_data = 3;
+  string hash = 4;
+  repeated Log logs = 5;
+}
+
+message Log {
+  string address = 1;
+   repeated string topics = 2;
+   bytes data = 3;
+   uint32 index = 4;
+   bool synthetic = 5;
+}

@@ -1,0 +1,23 @@
+syntax = "proto3";
+// package cosmos.base.abci.v1beta1;
+import "any.proto";
+
+// MsgData defines the data returned in a Result object during message
+// execution.
+message MsgData {
+  option deprecated           = true;
+  string msg_type = 1;
+  bytes  data     = 2;
+}
+
+// TxMsgData defines a list of MsgData. A transaction will have a MsgData object
+// for each message.
+message TxMsgData {
+  // data field is deprecated and not populated.
+  repeated MsgData data = 1 [deprecated = true];
+  // msg_responses contains the Msg handler responses packed into Anys.
+  //
+  // Since: cosmos-sdk 0.46
+  repeated Any msg_responses = 2;
+}
+
