@@ -2,18 +2,23 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	types2 "github.com/sei-protocol/sei-chain/x/evm/types"
-	"github.com/tendermint/crypto/sha3"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/tendermint/tendermint/rpc/coretypes"
 	tendermint_type "github.com/tendermint/tendermint/types"
 	"strings"
+)
+
+var (
+	leafPrefix  = []byte{0}
+	innerPrefix = []byte{1}
 )
 
 func FetchBlock(cli *rpchttp.HTTP, height int64) *coretypes.ResultBlock {
@@ -121,7 +126,7 @@ func convertTxsResults(txsResults []*abci.ExecTxResult) []*abci.ResponseDeliverT
 	return res
 }
 
-func ParseResponse(txResult *abci.ResponseDeliverTx) (string, *types2.MsgEVMTransactionResponse, error) {
+func ParseAndVerify(txResult *abci.ResponseDeliverTx, proof merkle.Proof, root []byte) (string, *types2.MsgEVMTransactionResponse, error) {
 	txMsgData := &sdk.TxMsgData{}
 	err := txMsgData.Unmarshal(txResult.Data)
 	if err != nil {
@@ -142,15 +147,23 @@ func ParseResponse(txResult *abci.ResponseDeliverTx) (string, *types2.MsgEVMTran
 
 	data1, _ := txResponse.Marshal()
 	data2, _ := txMsgData.Marshal()
-	data3, _ := txResult.Marshal()
+
+	leafData, err := txResult.Marshal()
+	if err != nil {
+		panic(err)
+	}
 
 	fmt.Printf("data1: %x\n", data1)
 	fmt.Printf("data2: %x\n", data2)
-	fmt.Printf("leaf_data: %x\n", data3)
-	leafHash := sha3.Sum256(data3)
-	fmt.Printf("leafHash: %x\n", leafHash)
+	fmt.Printf("leafdata: %x\n", leafData)
+	fmt.Printf("leftHash: %x\n", sha256.Sum256(append(leafPrefix, leafData...)))
 
-	fmt.Printf("log: %+v\n", txResponse.Logs)
+	err = proof.Verify(root, leafData)
+	if err != nil {
+		panic(err)
+	}
+
+	//fmt.Printf("log: %+v\n", txResponse.Logs)
 
 	return "", nil, errors.New("not found")
 }
@@ -181,8 +194,9 @@ func test() {
 	}
 	fmt.Printf("root: %x\n", rootHash)
 	fmt.Printf("proof: %v\n", proof.String())
+	fmt.Printf("leafHash: %x\n", proof.LeafHash)
 
-	ParseResponse(txResult)
+	ParseAndVerify(txResult, proof, rootHash)
 }
 
 func main() {
