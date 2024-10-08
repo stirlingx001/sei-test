@@ -176,8 +176,8 @@ func test() {
 		panic(err)
 	}
 
-	evmTxHash := common.HexToHash("0xa0b90d9817a1e9b546e996062940d26a3a7b26ebeb67b00742f0c311da9fcfcf")
-	height := int64(119897376)
+	evmTxHash := common.HexToHash("0xac3580cbc872123146affd257141950c3a2285a48b00c9e25285c89e04f55fa4")
+	height := int64(122593436)
 	curBlock := FetchBlock(client, height)
 
 	tx, err := FindTx(client, curBlock, evmTxHash.String())
