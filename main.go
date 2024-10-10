@@ -126,7 +126,7 @@ func convertTxsResults(txsResults []*abci.ExecTxResult) []*abci.ResponseDeliverT
 	return res
 }
 
-func ParseAndVerify(txResult *abci.ResponseDeliverTx, proof merkle.Proof, root []byte) (string, *types2.MsgEVMTransactionResponse, error) {
+func ParseAndVerify(txResult *abci.ResponseDeliverTx, proof merkle.Proof, root []byte, logIndex int) (string, *types2.MsgEVMTransactionResponse, error) {
 	txMsgData := &sdk.TxMsgData{}
 	err := txMsgData.Unmarshal(txResult.Data)
 	if err != nil {
@@ -145,16 +145,12 @@ func ParseAndVerify(txResult *abci.ResponseDeliverTx, proof merkle.Proof, root [
 		}
 	}
 
-	data1, _ := txResponse.Marshal()
-	data2, _ := txMsgData.Marshal()
+	//data1, _ := txResponse.Marshal()
+	//data2, _ := txMsgData.Marshal()
+	leafData, _ := txResult.Marshal()
 
-	leafData, err := txResult.Marshal()
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("data1: %x\n", data1)
-	fmt.Printf("data2: %x\n", data2)
+	//fmt.Printf("data1: %x\n", data1)
+	//fmt.Printf("data2: %x\n", data2)
 	fmt.Printf("leafdata: %x\n", leafData)
 	fmt.Printf("leftHash: %x\n", sha256.Sum256(append(leafPrefix, leafData...)))
 
@@ -163,7 +159,16 @@ func ParseAndVerify(txResult *abci.ResponseDeliverTx, proof merkle.Proof, root [
 		panic(err)
 	}
 
-	//fmt.Printf("log: %+v\n", txResponse.Logs)
+	encodedLog, err := txResponse.Logs[logIndex].Marshal()
+	if err != nil {
+		panic(err)
+	}
+	pos := strings.Index(string(leafData), string(encodedLog))
+	fmt.Printf("pos: %d, len: %d\n", pos, len(encodedLog))
+
+	destLog := &types2.Log{}
+	destLog.Unmarshal(leafData[pos : pos+len(encodedLog)])
+	fmt.Printf("log: %+v\n", destLog)
 
 	return "", nil, errors.New("not found")
 }
@@ -196,7 +201,7 @@ func test() {
 	fmt.Printf("proof: %v\n", proof.String())
 	fmt.Printf("leafHash: %x\n", proof.LeafHash)
 
-	ParseAndVerify(txResult, proof, rootHash)
+	ParseAndVerify(txResult, proof, rootHash, 2)
 }
 
 func main() {
