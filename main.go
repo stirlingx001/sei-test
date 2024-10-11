@@ -174,15 +174,15 @@ func ParseAndVerify(txResult *abci.ResponseDeliverTx, proof merkle.Proof, root [
 }
 
 func test() {
-	url := "https://rpc-testnet.sei-apis.com:443"
+	url := "https://rpc.sei-apis.com:443"
 	client, err := rpchttp.New(url)
 	if err != nil {
 		fmt.Errorf("failed to connect to the RPC server: %v", err)
 		panic(err)
 	}
 
-	evmTxHash := common.HexToHash("0xac3580cbc872123146affd257141950c3a2285a48b00c9e25285c89e04f55fa4")
-	height := int64(122593436)
+	evmTxHash := common.HexToHash("0xbce6d4cc66a06440e32e749817b7bb8e64f6de620d6b376128e052c1fc117588")
+	height := int64(107717079)
 	curBlock := FetchBlock(client, height)
 
 	tx, err := FindTx(client, curBlock, evmTxHash.String())
@@ -201,7 +201,7 @@ func test() {
 	fmt.Printf("proof: %v\n", proof.String())
 	fmt.Printf("leafHash: %x\n", proof.LeafHash)
 
-	ParseAndVerify(txResult, proof, rootHash, 2)
+	ParseAndVerify(txResult, proof, rootHash, 3)
 }
 
 func main() {
